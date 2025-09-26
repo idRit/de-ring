@@ -16,5 +16,17 @@
   "bugs": {
     "url": "https://github.com/idRit/de-ring/issues"
   },
-  "homepage": "https://github.com/idRit/de-ring#readme"
+  "homepage": "https://github.com/idRit/de-ring#readme",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "dotenv": "^17.2.2",
+    "ethers": "^5.8.0",
+    "hardhat": "^3.0.6"
+  },
+  "dependencies": {
+    "@pythnetwork/pyth-sdk-js": "^1.2.0",
+    "@pythnetwork/pyth-sdk-solidity": "^4.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  }
 }
