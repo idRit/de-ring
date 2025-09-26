@@ -21,7 +21,7 @@
     "@nomiclabs/hardhat-ethers": "^2.2.3",
     "dotenv": "^17.2.2",
     "ethers": "^5.8.0",
-    "hardhat": "^3.0.6"
+    "hardhat": "^2.22.6"
   },
   "dependencies": {
     "@pythnetwork/pyth-sdk-js": "^1.2.0",
