@@ -21,8 +21,8 @@ The contract source is [`StepGoalEscrow.sol`](contracts/StepGoalEscrow.sol).
 
 ## Deployed smart contract (testnet)
 
-- **Contract ID (provided):** `0.0.6914789`  
-- **Explorer:** [Hashscan link](https://hashscan.io/testnet/contract/0.0.6914789)  
+- **Contract ID (provided):** `0.0.6915081`  
+- **Explorer:** [Hashscan link](https://hashscan.io/testnet/contract/0.0.6915081)  
 
 > ⚠️ Please verify the contract source & ABI on explorer or against your compiled artifacts before interacting programmatically.
 
@@ -229,4 +229,3 @@ See [`LICENSE`](LICENSE) if present in the repo.
 ## Acknowledgements
 
 - [Pyth Network](https://pyth.network) for price feed integration.  
-- Repo authors for `de-ring`.  
