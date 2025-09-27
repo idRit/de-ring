@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/starlight/Documents/projects/de-ring/contracts/StepGoalEscrow.sol": {
-      "lastModificationDate": 1758920069741,
-      "contentHash": "2f60efa08034e430eedf2050da30d233",
+      "lastModificationDate": 1758959927010,
+      "contentHash": "88a1efc7c62dbd3c14886c31aa6029a0",
       "sourceName": "contracts/StepGoalEscrow.sol",
       "solcConfig": {
         "version": "0.8.24",

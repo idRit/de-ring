@@ -26,6 +26,10 @@ contract StepGoalEscrow {
     event GoalMarked(address indexed user, uint256 index, bool success);
     event Withdrawn(address indexed user, uint256 hbarAmount, uint256 usdValue);
 
+    // 🔎 Debug events
+    event DebugString(string message);
+    event DebugUint(string message, uint256 value);
+
     modifier onlyOracle() {
         require(msg.sender == oracle, "Only oracle can mark goals");
         _;
@@ -68,37 +72,97 @@ contract StepGoalEscrow {
     }
 
     // Withdraw unlocked funds, with fresh Pyth price update
-    function updateAndWithdraw(bytes[] calldata priceUpdateData) external {
-        // Pull latest signed price update from Pyth
-        pyth.updatePriceFeeds(priceUpdateData);
+    function updateAndWithdraw(
+        bytes[] calldata priceUpdateData
+    ) external payable {
+        emit DebugString("Entered updateAndWithdraw");
 
+        // 1) compute required fee
+        uint256 fee = pyth.getUpdateFee(priceUpdateData);
+        emit DebugUint("Pyth update fee", fee);
+
+        // 2) require caller provided at least the fee
+        require(msg.value >= fee, "Insufficient fee for price update");
+
+        // 3) forward the fee to Pyth to update price feeds
+        pyth.updatePriceFeeds{value: fee}(priceUpdateData);
+        emit DebugUint("Price update data count", priceUpdateData.length);
+
+        // 4) proceed with your withdraw logic
         Deposit storage dep = deposits[msg.sender];
         require(dep.amount > 0, "No deposit");
+        emit DebugUint("Deposit amount", dep.amount);
 
+        require(dep.goals.length > 0, "No goals configured");
         uint256 achievedCount = 0;
         for (uint i = 0; i < dep.goals.length; i++) {
             if (dep.goals[i].achieved) achievedCount++;
         }
+        emit DebugUint("Achieved goals", achievedCount);
 
         uint256 unlocked = (dep.amount * achievedCount) / dep.goals.length;
         uint256 available = unlocked - dep.withdrawn;
+        emit DebugUint("Available for withdrawal", available);
         require(available > 0, "Nothing to withdraw");
 
         // Get fresh price from Pyth
         PythStructs.Price memory price = pyth.getPriceUnsafe(hbarUsdPriceId);
+        emit DebugUint("Raw price", uint256(int256(price.price)));
+        emit DebugUint("Expo", uint256(int256(price.expo)));
 
-        // Convert int64 price → uint256
         uint256 priceValue = uint256(int256(price.price));
-
-        // Adjust decimals based on expo (usually negative, e.g., -8)
         uint256 decimals = price.expo < 0
             ? uint32(-price.expo)
             : uint32(price.expo);
         uint256 usdValue = (available * priceValue) / (10 ** decimals);
+        emit DebugUint("USD value", usdValue);
 
+        // Effects first
         dep.withdrawn += available;
-        payable(msg.sender).transfer(available);
+
+        // Interaction: pay user
+        (bool sent, ) = msg.sender.call{value: available}("");
+        require(sent, "Withdrawal transfer failed");
 
         emit Withdrawn(msg.sender, available, usdValue);
+
+        // Refund extra fee (best-effort)
+        uint256 refund = msg.value - fee;
+        if (refund > 0) {
+            (bool r, ) = msg.sender.call{value: refund}("");
+            if (!r) {
+                emit DebugString("Refund failed");
+                emit DebugUint("Refund amount", refund);
+            } else {
+                emit DebugUint("Refunded excess fee", refund);
+            }
+        }
+    }
+
+    function withdrawWithoutOracle() external {
+        emit DebugString("Entered withdrawWithoutOracle");
+
+        Deposit storage dep = deposits[msg.sender];
+        require(dep.amount > 0, "No deposit");
+
+        require(dep.goals.length > 0, "No goals configured");
+        uint256 achievedCount = 0;
+        for (uint i = 0; i < dep.goals.length; i++) {
+            if (dep.goals[i].achieved) achievedCount++;
+        }
+        emit DebugUint("Achieved goals", achievedCount);
+
+        uint256 unlocked = (dep.amount * achievedCount) / dep.goals.length;
+        uint256 available = unlocked - dep.withdrawn;
+        emit DebugUint("Available for withdrawal", available);
+        require(available > 0, "Nothing to withdraw");
+
+        dep.withdrawn += available;
+
+        (bool sent, ) = msg.sender.call{value: available}("");
+        require(sent, "Withdrawal transfer failed");
+
+        // Emit event with only HBAR amount (USD skipped)
+        emit Withdrawn(msg.sender, available, 0);
     }
 }
