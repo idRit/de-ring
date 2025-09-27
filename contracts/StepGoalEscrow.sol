@@ -81,9 +81,6 @@ contract StepGoalEscrow {
         uint256 fee = pyth.getUpdateFee(priceUpdateData);
         emit DebugUint("Pyth update fee", fee);
 
-        // 2) require caller provided at least the fee
-        require(msg.value >= fee, "Insufficient fee for price update");
-
         // 3) forward the fee to Pyth to update price feeds
         pyth.updatePriceFeeds{value: fee}(priceUpdateData);
         emit DebugUint("Price update data count", priceUpdateData.length);
