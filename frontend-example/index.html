@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FitChain Escrow</title>
+</head>
+<body>
+  <h1>FitChain Escrow</h1>
+  <button onclick="connectWallet()">Connect Wallet</button>
+  <button onclick="disconnectWallet()">Disconnect Wallet</button><br><br>
+
+  <p><strong>Connected Address:</strong> <span id="walletAddress">-</span></p>
+  <p><strong>HBAR Balance:</strong> <span id="walletBalance">-</span></p>
+
+  <h3>Deposit</h3>
+  <input id="goals" placeholder="Step goals (comma separated)">
+  <input id="amount" placeholder="HBAR amount">
+  <button onclick="deposit()">Deposit</button><br><br>
+
+  <h3>Emulate Wearable</h3>
+  <input id="steps" placeholder="Enter steps achieved">
+  <input id="goalIndex" placeholder="Goal index (0,1,2...)">
+  <button onclick="submitSteps()">Submit Steps</button><br><br>
+
+  <h3>Withdraw</h3>
+  <button onclick="withdraw()">Withdraw</button>
+
+  <p id="status"></p>
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
