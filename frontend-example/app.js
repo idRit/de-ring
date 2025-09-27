@@ -256,61 +256,79 @@ const hbarUsdPriceId = "0xf2ef5dc6156e6cdccda6c315f3fc6de2bf37e9aecbc9b5efc51de9
 const HEDERA_TESTNET_PARAMS = {
   chainId: "0x128", // 296 in hex
   chainName: "Hedera Testnet",
-  nativeCurrency: {
-    name: "HBAR",
-    symbol: "HBAR",
-    decimals: 18,
-  },
+  nativeCurrency: { name: "HBAR", symbol: "HBAR", decimals: 18 },
   rpcUrls: ["https://testnet.hashio.io/api"],
   blockExplorerUrls: ["https://hashscan.io/testnet"],
 };
 
-async function connectWallet() {
-  if (!window.ethereum) {
-    alert("Install MetaMask first!");
-    return;
-  }
+/**
+ * Utility: Extract a clean error message
+ */
+function parseError(err) {
+  if (!err) return "Unknown error";
 
-  provider = new ethers.providers.Web3Provider(window.ethereum);
-  await provider.send("eth_requestAccounts", []);
-  signer = provider.getSigner();
+  if (err.error && err.error.message) return err.error.message;
+  if (err.data && err.data.message) return err.data.message;
+  if (err.reason) return err.reason;
 
-  // ✅ Ensure correct network
-  const network = await provider.getNetwork();
-  if (network.chainId !== 296) {
-    try {
-      // Try switching
-      await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: HEDERA_TESTNET_PARAMS.chainId }],
-      });
-      location.reload(); // reload to re-init provider
-    } catch (switchError) {
-      // If the chain is not added yet
-      if (switchError.code === 4902) {
-        await window.ethereum.request({
-          method: "wallet_addEthereumChain",
-          params: [HEDERA_TESTNET_PARAMS],
-        });
-        location.reload();
-      } else {
-        document.getElementById("status").innerText =
-          "❌ Wrong network. Please switch MetaMask to Hedera Testnet.";
-        return;
-      }
-    }
-  }
-
-  contract = new ethers.Contract(contractAddress, contractABI, signer);
-
-  const userAddress = await signer.getAddress();
-  document.getElementById("walletAddress").innerText = userAddress;
-
-  await updateBalance();
-
-  document.getElementById("status").innerText = "✅ Wallet connected (Hedera Testnet)!";
+  return err.message || String(err);
 }
 
+/**
+ * Connect MetaMask to Hedera Testnet
+ */
+async function connectWallet() {
+  try {
+    if (!window.ethereum) {
+      alert("Install MetaMask first!");
+      return;
+    }
+
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    signer = provider.getSigner();
+
+    // ✅ Ensure correct network
+    const network = await provider.getNetwork();
+    if (network.chainId !== 296) {
+      try {
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: HEDERA_TESTNET_PARAMS.chainId }],
+        });
+        location.reload();
+      } catch (switchError) {
+        if (switchError.code === 4902) {
+          await window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [HEDERA_TESTNET_PARAMS],
+          });
+          location.reload();
+        } else {
+          document.getElementById("status").innerText =
+            "❌ Wrong network. Please switch MetaMask to Hedera Testnet.";
+          return;
+        }
+      }
+    }
+
+    contract = new ethers.Contract(contractAddress, contractABI, signer);
+
+    const userAddress = await signer.getAddress();
+    document.getElementById("walletAddress").innerText = userAddress;
+
+    await updateBalance();
+
+    document.getElementById("status").innerText =
+      "✅ Wallet connected (Hedera Testnet)!";
+  } catch (err) {
+    document.getElementById("status").innerText = `❌ ${parseError(err)}`;
+  }
+}
+
+/**
+ * Disconnect wallet
+ */
 function disconnectWallet() {
   provider = null;
   signer = null;
@@ -321,6 +339,9 @@ function disconnectWallet() {
   document.getElementById("status").innerText = "🔌 Wallet disconnected!";
 }
 
+/**
+ * Deposit HBAR with goals
+ */
 async function deposit() {
   try {
     if (!contract) {
@@ -329,7 +350,9 @@ async function deposit() {
     }
 
     const goals = document.getElementById("goals").value.split(",").map(Number);
-    const amount = ethers.utils.parseEther(document.getElementById("amount").value);
+    const amount = ethers.utils.parseEther(
+      document.getElementById("amount").value
+    );
 
     const userAddress = await signer.getAddress();
     const balance = await provider.getBalance(userAddress);
@@ -346,10 +369,13 @@ async function deposit() {
     document.getElementById("status").innerText = "✅ Deposit successful!";
     await updateBalance();
   } catch (err) {
-    document.getElementById("status").innerText = `❌ Error: ${err.message}`;
+    document.getElementById("status").innerText = `❌ ${parseError(err)}`;
   }
 }
 
+/**
+ * Submit step data to the oracle
+ */
 async function submitSteps() {
   try {
     if (!signer) {
@@ -360,24 +386,28 @@ async function submitSteps() {
     const steps = parseInt(document.getElementById("steps").value);
     const goalIndex = parseInt(document.getElementById("goalIndex").value);
 
-    const res = await fetch("http://localhost:4000/mark-goal", {
+    const res = await fetch("https://de-ring.onrender.com/mark-goal", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         user: await signer.getAddress(),
         goalIndex,
         steps,
-        stepTarget: 50000 // demo target
-      })
+        stepTarget: 50000, // demo target
+      }),
     });
+
     const data = await res.json();
     document.getElementById("status").innerText =
       `✅ Oracle updated: ${JSON.stringify(data)}`;
   } catch (err) {
-    document.getElementById("status").innerText = `❌ Error: ${err.message}`;
+    document.getElementById("status").innerText = `❌ ${parseError(err)}`;
   }
 }
 
+/**
+ * Withdraw with fresh Pyth price update
+ */
 async function withdrawUpdated() {
   try {
     if (!contract) {
@@ -386,29 +416,29 @@ async function withdrawUpdated() {
     }
 
     const url = `https://hermes-beta.pyth.network/v2/updates/price/latest?ids[]=${hbarUsdPriceId}`;
-    console.log(url);
     const response = await fetch(url);
     const data = await response.json();
 
-    // ✅ Hermes gives `data.binary.data` → array of hex strings without 0x prefix
-    const updateData = data.binary.data.map(d =>
+    const updateData = data.binary.data.map((d) =>
       d.startsWith("0x") ? d : "0x" + d
     );
 
-    console.log("Sending price update to contract:", updateData);
-
-    const tx = await contract.updateAndWithdraw(updateData, { gasLimit: 3_000_000 });
+    const tx = await contract.updateAndWithdraw(updateData, {
+      gasLimit: 3_000_000,
+    });
     await tx.wait();
 
     document.getElementById("status").innerText =
       "✅ Withdraw successful (fresh Pyth price used)!";
     await updateBalance();
   } catch (err) {
-    console.error("Withdraw error:", err);
-    document.getElementById("status").innerText = `❌ Error: ${err.message}`;
+    document.getElementById("status").innerText = `❌ ${parseError(err)}`;
   }
 }
 
+/**
+ * Withdraw without oracle
+ */
 async function withdraw() {
   try {
     if (!contract) {
@@ -419,17 +449,16 @@ async function withdraw() {
     const tx = await contract.withdrawWithoutOracle({ gasLimit: 3_000_000 });
     await tx.wait();
 
-    document.getElementById("status").innerText =
-      "✅ Withdraw successful (HBAR only, no oracle used)!";
+    document.getElementById("status").innerText = "✅ Withdraw successful!";
     await updateBalance();
   } catch (err) {
-    console.error("WithdrawWithoutOracle error:", err);
-    document.getElementById("status").innerText = `❌ Error: ${err.message}`;
+    document.getElementById("status").innerText = `❌ ${parseError(err)}`;
   }
 }
 
-
-// ✅ Refresh balance
+/**
+ * Refresh wallet balance
+ */
 async function updateBalance() {
   if (!signer) return;
   const userAddress = await signer.getAddress();
