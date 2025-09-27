@@ -21,8 +21,8 @@ The contract source is [`StepGoalEscrow.sol`](contracts/StepGoalEscrow.sol).
 
 ## Deployed smart contract (testnet)
 
-- **Contract ID (provided):** `0.0.6914645`  
-- **Explorer:** [Hashscan link](https://hashscan.io/testnet/contract/0.0.6914645)  
+- **Contract ID (provided):** `0.0.6914789`  
+- **Explorer:** [Hashscan link](https://hashscan.io/testnet/contract/0.0.6914789)  
 
 > ⚠️ Please verify the contract source & ABI on explorer or against your compiled artifacts before interacting programmatically.
 
