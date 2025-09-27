@@ -1,7 +1,6 @@
 let provider, signer, contract;
 
-// const contractAddress = "0x8A3cc59E3418601B1c56f864c3E8f1f4f457BCEf";
-const contractAddress = "0x8a01ce8A5A8A47ED9f27265C979fe682247B116D";
+const contractAddress = "0x8A3cc59E3418601B1c56f864c3E8f1f4f457BCEf";
 const contractABI = [
   {
     "inputs": [
@@ -379,7 +378,7 @@ async function submitSteps() {
   }
 }
 
-async function withdraw() {
+async function withdrawUpdated() {
   try {
     if (!contract) {
       document.getElementById("status").innerText = "❌ Connect your wallet first!";
@@ -410,7 +409,7 @@ async function withdraw() {
   }
 }
 
-async function withdraw1() {
+async function withdraw() {
   try {
     if (!contract) {
       document.getElementById("status").innerText = "❌ Connect your wallet first!";
