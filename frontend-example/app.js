@@ -415,7 +415,7 @@ async function withdrawUpdated() {
       return;
     }
 
-    const url = `https://hermes-beta.pyth.network/v2/updates/price/latest?ids[]=${hbarUsdPriceId}`;
+    const url = `https://hermes.pyth.network/v2/updates/price/latest?ids[]=${hbarUsdPriceId}`;
     const response = await fetch(url);
     const data = await response.json();
 
