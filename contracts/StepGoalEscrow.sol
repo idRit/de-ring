@@ -134,6 +134,9 @@ contract StepGoalEscrow {
                 emit DebugString("Refund failed");
                 emit DebugUint("Refund amount", refund);
             } else {
+                if (dep.withdrawn == dep.amount) {
+                    delete deposits[msg.sender];
+                }
                 emit DebugUint("Refunded excess fee", refund);
             }
         }
@@ -161,6 +164,10 @@ contract StepGoalEscrow {
 
         (bool sent, ) = msg.sender.call{value: available}("");
         require(sent, "Withdrawal transfer failed");
+
+        if (dep.withdrawn == dep.amount) {
+            delete deposits[msg.sender];
+        }
 
         // Emit event with only HBAR amount (USD skipped)
         emit Withdrawn(msg.sender, available, 0);

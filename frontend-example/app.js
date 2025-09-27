@@ -1,6 +1,6 @@
 let provider, signer, contract;
 
-const contractAddress = "0x8b675d7C337e494734A6438d327207B40246C466";
+const contractAddress = "0x8A3cc59E3418601B1c56f864c3E8f1f4f457BCEf";
 const contractABI = [
   {
     "inputs": [
