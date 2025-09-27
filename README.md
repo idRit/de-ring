@@ -19,12 +19,48 @@ The contract source is [`StepGoalEscrow.sol`](contracts/StepGoalEscrow.sol).
 
 ---
 
+## Register & Use (Frontend)
+
+You can interact with the escrow contract through the demo frontend at **[de-ring-front.onrender.com](https://de-ring-front.onrender.com/)**. Simply connect your Hedera wallet (e.g., HashPack) to register, then create a single deposit with defined step goals. Once the trusted oracle marks goals as achieved, you can withdraw unlocked funds directly from the app — either as HBAR or with USD value reporting via Pyth feeds. Only one active deposit per account is supported.
+
+---
+
 ## Deployed smart contract (testnet)
 
 - **Contract ID (provided):** `0.0.6915081`  
 - **Explorer:** [Hashscan link](https://hashscan.io/testnet/contract/0.0.6915081)  
 
 > ⚠️ Please verify the contract source & ABI on explorer or against your compiled artifacts before interacting programmatically.
+
+---
+
+## Backend API: Mark a Goal
+
+The backend exposes an endpoint to allow the trusted oracle to mark goals as achieved.  
+Example usage with `fetch` in JavaScript:
+
+```js
+const res = await fetch("https://de-ring.onrender.com/mark-goal", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    user: await signer.getAddress(), // Hedera account to mark
+    goalIndex,                       // index of the goal to mark
+    steps,                           // steps recorded from wearable
+    stepTarget: 50000,               // demo target for validation
+  }),
+});
+
+const data = await res.json();
+console.log("mark-goal response:", data);
+user — the Hedera address of the depositor.
+
+goalIndex — index in the depositor’s goals array.
+
+steps — actual steps taken (supplied by wearable or simulator).
+
+stepTarget — step threshold for that goal (for demo purposes).
+```
 
 ---
 
